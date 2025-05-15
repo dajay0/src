@@ -301,9 +301,10 @@ def commandline_user_interface():
             print("2. Dump all video file records to a CSV file")
             print("3. Dump all device metadata from the database")
             print("4. Delete all records for a given deviceID")
-            print("5. Exit the program")
+            print("5. Cluster video files by Levenshtein distance using DBSCAN")
+            print("6. Exit the program")
             
-            choice = input("Enter your choice (1/2/3/4/5): ").strip()
+            choice = input("Enter your choice (1/2/3/4/5/6): ").strip()
             
             if choice == "1":
                 folder_to_scan = input("Enter the folder path to scan for video files: ").strip()
@@ -356,10 +357,24 @@ def commandline_user_interface():
                 except sqlite3.Error as e:
                     print(f"Database error while deleting records: {e}")
             elif choice == "5":
+                try:
+                    from DBSCAN_Lev import cluster_by_levenshtein_dbscan
+                    all_video_files = dump_all_video_files(db_connection)
+                    normalized_filenames = [video["normalized_filename"] for video in all_video_files]
+                    clusters = cluster_by_levenshtein_dbscan(normalized_filenames)
+                    for cluster_id, filenames in clusters.items():
+                        print(f"Cluster {cluster_id}:")
+                        for filename in filenames:
+                            print(f"  - {filename}")
+                except ImportError as e:
+                    print(f"Failed to import clustering function: {e}")
+                except Exception as e:
+                    print(f"An error occurred while clustering: {e}")
+            elif choice == "6":
                 print("Exiting the program.")
                 break
             else:
-                print("Invalid choice. Please enter 1, 2, 3, 4, or 5.")
+                print("Invalid choice. Please enter 1, 2, 3, 4, 5, or 6.")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
     finally:
